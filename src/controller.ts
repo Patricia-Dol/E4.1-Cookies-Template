@@ -16,11 +16,16 @@ export const getHome = async (req: IncomingMessage, res: ServerResponse) => {
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/html");
+    res.setHeader("Set-Cookie", [
+    "likes=somethingYouLike",
+    "lovesWebDev=false",
+  ]);
     res.end(
         await renderTemplate("src/views/HomeView.hbs", {
             title: "Welcome",
             cookies: req.headers.cookie?.toString(),
         }),
+
     );
 };
 
