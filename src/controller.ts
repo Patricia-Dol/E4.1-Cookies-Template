@@ -21,19 +21,20 @@ export const getHome = async (req: IncomingMessage, res: ServerResponse) => {
 
     let language = theCookies["language"]
 
+    const cookies = [];
+
     if(language == null){
         language = "English"
         // need to add it to the list of headers
-        res.setHeader("Set-Cookie", "language=English");
+        cookies.push("language=English")
     }
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/html");
-    res.setHeader("Set-Cookie", [
-        "likes=somethingYouLike",
-        "lovesWebDev=false",
-  ]);
-  if(language == "fr"){
+    cookies.push("likes=somethingYouLike")
+    cookies.push("lovesWebDev=false")
+    res.setHeader("Set-Cookie", cookies);
+  if(language == "French" || language == "fr"){
     res.end(
         await renderTemplate("src/views/HomeView.hbs", {
             title: "Bonjour",
@@ -59,15 +60,22 @@ export const changeLanguage = async (
     req: IncomingMessage,
     res: ServerResponse,
 ) => {
-    /** TODO:
-     * 1. Parse the body of the request.
-     * 2. Extract the language from the body. This data is coming from a form submission.
-     * 3. Set the language cookie.
-     * 4. Redirect the user back to the previous page using the referer header.
-     *    @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referer
-     * 5. End the response.
-     */
-};
+        /** TODO:
+         * 1. Parse the body of the request.
+         * 2. Extract the language from the body. This data is coming from a form submission.
+         * 3. Set the language cookie.
+         * 4. Redirect the user back to the previous page using the referer header.
+         *    @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referer
+         * 5. End the response.
+         */
+        let parseReq = parseBody(req)
+        let theCookies = getCookies(req)
+        let language = theCookies["language"];
+        res.end(
+            
+        );
+
+    }
 
 export const getOnePokemon = async (
     req: IncomingMessage,
@@ -78,6 +86,9 @@ export const getOnePokemon = async (
      * 2. Get the language from the cookie.
      * 3. Send the appropriate Pokemon data to the view based on the language.
      */
+    let theCookies = getCookies(req)
+    let language = theCookies["language"]
+
     const id = Number(req.url?.split("/")[2]);
     const foundPokemon = database.find((pokemon) => pokemon.id === id);
 
@@ -92,13 +103,26 @@ export const getOnePokemon = async (
         return;
     }
 
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/html");
-    res.end(
-        await renderTemplate("src/views/ShowView.hbs", {
-            pokemon: foundPokemon,
-        }),
-    );
+    if(language == "French"){
+        let thePokemon = {name:foundPokemon.name.fr,type:foundPokemon.type.fr,info:foundPokemon.info.fr,image:foundPokemon.image}
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        res.end(
+            await renderTemplate("src/views/ShowView.hbs", {
+                pokemon: thePokemon,
+            }),
+        );
+    }
+    else{
+        let thePokemon = {name:foundPokemon.name.en,type:foundPokemon.type.en,info:foundPokemon.info.en,image:foundPokemon.image}
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        res.end(
+            await renderTemplate("src/views/ShowView.hbs", {
+                pokemon: thePokemon,
+            }),
+        );
+    }
 };
 
 export const getAllPokemon = async (
@@ -110,14 +134,45 @@ export const getAllPokemon = async (
      * 2. Get the language from the cookie.
      * 3. Send the appropriate Pokemon data to the view based on the language.
      */
+    let theCookies = getCookies(req)
+    let language = theCookies["language"]
 
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/html");
-    res.end(
-        await renderTemplate("src/views/ListView.hbs", {
-            pokemon: database,
-        }),
-    );
+    if(language == "French"){
+        let pokemons = database.map((poke) => {
+            return{
+                id: poke.id,
+                name: poke.name.fr,
+                type: poke.type.fr,
+                info: poke.info.fr,
+                image: poke.image}
+        });
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        res.end(
+            await renderTemplate("src/views/ListView.hbs", {
+                pokemon: pokemons,
+            }),
+        );
+    }
+    else{
+        let pokemons = database.map((poke) => {
+            return{
+                id: poke.id,
+                name: poke.name.en,
+                type: poke.type.en,
+                info: poke.info.en,
+                image: poke.image}
+        });
+        
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        res.end(
+            await renderTemplate("src/views/ListView.hbs", {
+                pokemon: pokemons,
+            }),
+        );
+    }
 };
 
 const parseBody = async (req: IncomingMessage) => {
@@ -144,7 +199,7 @@ const getCookies = (req: IncomingMessage): Record<string, string> => {
     // header of the cookie
     let cookieHeader = req.headers.cookie
     // if there are multiple cookies they will be divided by ";" 
-    let indivodualCookies = cookieHeader?.split(";")
+    let indivodualCookies = cookieHeader?.split("; ")
     //record == dictionaries (object of key vale references)
     let cookies: Record<string,string> = {}
 
