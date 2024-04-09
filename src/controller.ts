@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { database } from "./model";
 import { renderTemplate } from "./view";
+import { stringify } from "querystring";
 
 /**
  * All of these function have a TODO comment. Follow the steps in the
@@ -13,6 +14,9 @@ export const getHome = async (req: IncomingMessage, res: ServerResponse) => {
      * 2. Get the language from the cookie.
      * 3. Send the appropriate Welcome message to the view based on the language.
      */
+
+    // HELP: NOT GETTING DISPLAYED
+    console.log(getCookies(req))
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/html");
@@ -27,6 +31,7 @@ export const getHome = async (req: IncomingMessage, res: ServerResponse) => {
         }),
 
     );
+    
 };
 
 export const changeLanguage = async (
@@ -115,6 +120,19 @@ const parseBody = async (req: IncomingMessage) => {
  * @see https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type
  */
 const getCookies = (req: IncomingMessage): Record<string, string> => {
+    // header of the cookie
+    let cookieHeader = req.headers.cookie
+    // if there are multiple cookies they will be divided by ";" 
+    let indivodualCookies = cookieHeader?.split(";")
+    //record == dictionaries (object of key vale references)
+    let cookies: Record<string,string> = {}
+
+    indivodualCookies?.forEach(item => {
+        let halfCookie = item.split("=")
+        cookies[halfCookie[0]] = halfCookie[1]
+    })
+
+
     /** TODO:
      * 1. Get the cookie header from the request.
      * 2. Parse the cookie header into a Record<string, string> object.
@@ -124,5 +142,5 @@ const getCookies = (req: IncomingMessage): Record<string, string> => {
      * 3. Return the object.
      */
 
-    return {};
+    return cookies;
 };
