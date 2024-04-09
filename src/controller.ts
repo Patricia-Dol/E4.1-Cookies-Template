@@ -15,15 +15,35 @@ export const getHome = async (req: IncomingMessage, res: ServerResponse) => {
      * 3. Send the appropriate Welcome message to the view based on the language.
      */
 
-    // HELP: NOT GETTING DISPLAYED
-    console.log(getCookies(req))
+    let theCookies = getCookies(req)
+    // HELP THE COOKIE DOESN'T WANT TO BE DISPLAYED!
+    console.log(theCookies)
+
+    let language = theCookies["language"]
+
+    if(language == null){
+        language = "English"
+        // need to add it to the list of headers
+        res.setHeader("Set-Cookie", "language=English");
+    }
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/html");
     res.setHeader("Set-Cookie", [
-    "likes=somethingYouLike",
-    "lovesWebDev=false",
+        "likes=somethingYouLike",
+        "lovesWebDev=false",
   ]);
+  if(language == "fr"){
+    res.end(
+        await renderTemplate("src/views/HomeView.hbs", {
+            title: "Bonjour",
+            cookies: req.headers.cookie?.toString(),
+        }),
+
+    );
+  }
+  // The other cases will be in english since I can make an if statement for each language
+  else{
     res.end(
         await renderTemplate("src/views/HomeView.hbs", {
             title: "Welcome",
@@ -31,6 +51,7 @@ export const getHome = async (req: IncomingMessage, res: ServerResponse) => {
         }),
 
     );
+  }
     
 };
 
